@@ -13,7 +13,6 @@ import Head from 'next/head'
 import {
   ONE_GRAPH_APP_ID,
   ONE_GRAPH_SERVER_SIDE_ACCESS_TOKEN,
-  ONE_GRAPH_SITE_HOST,
 } from '../../lib/constants'
 import { serverSideAuthTokenConfigurationPrompt } from '../../lib/metaHelpers'
 import markdownToHtml from '../../lib/markdownToHtml'
@@ -39,7 +38,7 @@ export default function Post({
   }
   return (
     <Layout preview={preview}>
-      <Container>
+      <div className="flex flex-col h-screen mx-auto px-5 w-4/5">
         <Header />
         {router.isFallback ? (
           <PostTitle>Loading…</PostTitle>
@@ -67,7 +66,7 @@ export default function Post({
             {morePosts.length > 0 && <MoreStories posts={morePosts} />}
           </>
         )}
-      </Container>
+      </div>
     </Layout>
   )
 }

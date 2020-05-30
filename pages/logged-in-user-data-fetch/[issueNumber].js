@@ -11,6 +11,7 @@ import {
   findMeOnGitHub,
   getAllIssues,
   getIssueWithAccessToken,
+  getIssueWithServerSideAccessToken,
 } from '../../lib/api'
 import PostTitle from '../../components/post-title'
 import Head from 'next/head'
@@ -34,7 +35,7 @@ export default function Post({ post, me, isLoggedIn }) {
   }
   return (
     <Layout>
-      <Container>
+      <div className="flex flex-col h-screen mx-auto px-5 w-4/5">
         <Header />
         {router.isFallback ? (
           <PostTitle>Loading…</PostTitle>
@@ -50,10 +51,17 @@ export default function Post({ post, me, isLoggedIn }) {
                   content={post.repository.openGraphImageUrl}
                 />
               </Head>
-              <quote>
-                (I fetched this GitHub issue on your behalf,{' '}
-                {me?.name || me?.login})
-              </quote>
+              {!!me ? (
+                <quote>
+                  (I fetched this GitHub issue on your behalf,{' '}
+                  {me?.name || me?.login})
+                </quote>
+              ) : (
+                <quote>
+                  I fetched this using the server-side auth token since you're
+                  logged into services other than GitHub
+                </quote>
+              )}{' '}
               <PostHeader
                 title={post.title}
                 coverImage={post.repository.openGraphImageUrl}
@@ -65,7 +73,7 @@ export default function Post({ post, me, isLoggedIn }) {
             <SectionSeparator />
           </>
         )}
-      </Container>
+      </div>
     </Layout>
   )
 }
@@ -78,12 +86,20 @@ export async function getServerSideProps(ctx) {
   const isLoggedIn = !!userId
   const rawAgCookie = rawAuthGuardianCookie(ctx) || null
 
-  const issue = isLoggedIn
+  // First try to get the issue using the logged-in user's GitHub token
+  let issue = isLoggedIn
     ? await getIssueWithAccessToken(
         rawAgCookie,
         parseInt(ctx.params.issueNumber)
       )
     : null
+
+  // If they've logged into services *other* than GitHub, then use our server-side auth token to get the issue
+  if (!issue && isLoggedIn) {
+    issue = await getIssueWithServerSideAccessToken(
+      parseInt(ctx.params.issueNumber)
+    )
+  }
 
   const me = isLoggedIn ? await findMeOnGitHub(rawAgCookie) : null
 

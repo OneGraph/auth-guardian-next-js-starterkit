@@ -56,7 +56,7 @@ export default function Index() {
         <Head>
           <title>Next.js Auth Playground with OneGraph's AuthGuardian</title>
         </Head>
-        <div className="flex flex-col mx-auto px-5">
+        <div className="flex flex-col mx-auto px-5 w-4/5">
           {' '}
           {submitStatusMessages[submitStatus]}
           <br />
