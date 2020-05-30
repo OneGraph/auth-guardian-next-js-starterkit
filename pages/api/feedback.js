@@ -1,5 +1,9 @@
 import { FEEDBACK_REPO_ID } from '../../lib/constants'
-import { createGitHubIssueWithServerSideAccessToken } from '../../lib/api'
+import {
+  createGitHubIssueWithServerSideAccessToken,
+  findMeOnGitHub,
+} from '../../lib/api'
+import { rawAuthGuardianCookie } from '../../lib/oneGraphNextClient'
 
 export default async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*')
@@ -20,10 +24,16 @@ export default async (req, res) => {
     return
   }
 
+  const agCookie = (await rawAuthGuardianCookie(req)) || null
+
+  // If the user submitting feedback logged into GitHub, then include some data about them in the issue body so we can thank them later
+  const user = !!agCookie ? await findMeOnGitHub(agCookie) : null
+
+  console.log('Cookie / user: ', agCookie, user)
   const rawFeedback =
     typeof req.body === 'object' ? req.body : JSON.parse(req.body)
 
-  const backmatter = { emotion: rawFeedback.emotion || '还不错' }
+  const backmatter = { emotion: rawFeedback.emotion || '还不错', user: user }
   const feedbackTitle = rawFeedback.title || '[No title]'
   const feedbackBody = `${rawFeedback.body}
 
