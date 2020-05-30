@@ -18,14 +18,22 @@ import { serverSideAuthTokenConfigurationPrompt } from '../../lib/metaHelpers'
 import markdownToHtml from '../../lib/markdownToHtml'
 import { fetchOneGraph } from '../../lib/oneGraphNextClient'
 
-export default function Post({ post, morePosts, preview }) {
+export default function Post({
+  post,
+  morePosts,
+  preview,
+  isServerSideAccessTokenConfigured,
+}) {
   const router = useRouter()
-  if (!router.isFallback && !ONE_GRAPH_SERVER_SIDE_ACCESS_TOKEN) {
+  if (!router.isFallback && !isServerSideAccessTokenConfigured) {
     return (
-      <ErrorPage
-        statusCode={511}
-        title={serverSideAuthTokenConfigurationPrompt(ONE_GRAPH_APP_ID)}
-      />
+      <>
+        <pre>Blah: {JSON.stringify(isServerSideAccessTokenConfigured)}</pre>
+        <ErrorPage
+          statusCode={511}
+          title={serverSideAuthTokenConfigurationPrompt(ONE_GRAPH_APP_ID)}
+        />
+      </>
     )
   }
   return (
@@ -67,6 +75,7 @@ export async function getStaticProps({ params, preview = false }) {
   const issue = await getIssueWithServerSideAccessToken(
     parseInt(params.issueNumber)
   )
+  const isServerSideAccessTokenConfigured = !!ONE_GRAPH_SERVER_SIDE_ACCESS_TOKEN
   const content = await markdownToHtml(issue?.body || '')
 
   return {
@@ -77,6 +86,7 @@ export async function getStaticProps({ params, preview = false }) {
         content,
       },
       morePosts: issue?.morePosts ?? [],
+      isServerSideAccessTokenConfigured: isServerSideAccessTokenConfigured,
     },
   }
 }
